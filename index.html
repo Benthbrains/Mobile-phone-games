@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Mobile Coding Games Timeline</title>
+
+<style>
+:root {
+  --bg:#0f172a;
+  --card:#14213d;
+  --accent:#6366f1;
+  --text:#f8fafc;
+  --muted:#94a3b8;
+}
+
+* { box-sizing:border-box; }
+
+body {
+  margin:0;
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  user-select:none;
+  -webkit-user-select:none;
+}
+
+header {
+  padding:1.5rem;
+  text-align:center;
+}
+
+.timeline {
+  padding:1rem;
+  max-width:900px;
+  margin:auto;
+}
+
+.card {
+  background:var(--card);
+  border-radius:20px;
+  padding:1.2rem;
+  margin-bottom:1.5rem;
+}
+
+.year {
+  color:var(--accent);
+  font-weight:700;
+  font-size:0.9rem;
+}
+
+h2 { margin:0.3rem 0; }
+
+.summary {
+  color:var(--muted);
+  font-size:0.95rem;
+}
+
+button {
+  padding:0.6rem 1.2rem;
+  border-radius:999px;
+  border:none;
+  background:var(--accent);
+  color:white;
+  font-size:16px;
+  margin-top:0.5rem;
+  touch-action:manipulation;
+}
+
+.panel {
+  margin-top:1rem;
+  background:rgba(255,255,255,0.05);
+  padding:1rem;
+  border-radius:16px;
+  text-align:center;
+  display:none;
+}
+
+.panel.active { display:block; }
+
+input {
+  padding:0.5rem;
+  font-size:16px;
+  border-radius:10px;
+  border:none;
+  margin:0.4rem;
+  max-width:90%;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>🎮 Mobile Coding Games</h1>
+  <p style="color:var(--muted)">Tap, swipe, and play — fully mobile-ready</p>
+</header>
+
+<section class="timeline" id="timeline"></section>
+
+<script>
+/* MOBILE TAP HELPER */
+function onTap(el, fn) {
+  el.addEventListener("click", fn);
+  el.addEventListener("touchend", e => {
+    e.preventDefault();
+    fn(e);
+  });
+}
+
+/* GAME DATA */
+const games = [
+  {year:2020,title:"Guess the Number",summary:"Guess 1–20 using logic.",demo:"guess"},
+  {year:2021,title:"Reaction Test",summary:"Tap as fast as possible.",demo:"reaction"},
+  {year:2022,title:"Rock Paper Scissors",summary:"Classic tap battle.",demo:"rps"},
+  {year:2023,title:"Typing Speed",summary:"Mobile typing challenge.",demo:"typing"},
+  {year:2024,title:"Precision Tap",summary:"Targets shrink every tap.",demo:"precision"},
+  {year:2025,title:"Tap Frenzy",summary:"10 seconds of madness.",demo:"tap"}
+];
+
+/* MINI GAMES */
+const miniGames = {
+
+guess(root) {
+  const secret = Math.ceil(Math.random()*20);
+  const p = document.createElement("p");
+  p.textContent = "Number between 1 and 20";
+
+  const input = document.createElement("input");
+  input.type="number";
+
+  const btn = document.createElement("button");
+  btn.textContent="Guess";
+
+  const result = document.createElement("p");
+
+  onTap(btn,()=>{
+    const v=Number(input.value);
+    if(!v)return;
+    result.textContent =
+      v===secret ? "Correct 🎯" :
+      v>secret ? "Too high" : "Too low";
+  });
+
+  root.replaceChildren(p,input,btn,result);
+},
+
+reaction(root) {
+  const btn=document.createElement("button");
+  btn.textContent="Start";
+  const p=document.createElement("p");
+  let start=null,active=false;
+
+  onTap(btn,()=>{
+    if(!active){
+      btn.disabled=true;
+      p.textContent="Wait...";
+      setTimeout(()=>{
+        start=performance.now();
+        btn.disabled=false;
+        btn.textContent="TAP!";
+        active=true;
+      },800+Math.random()*1200);
+    } else {
+      const t=Math.round(performance.now()-start);
+      p.textContent=`Reaction: ${t} ms`;
+      btn.textContent="Start";
+      active=false;
+    }
+  });
+
+  root.replaceChildren(btn,p);
+},
+
+rps(root) {
+  const opts=["Rock","Paper","Scissors"];
+  const row=document.createElement("div");
+  row.style.display="flex";
+  row.style.justifyContent="center";
+  row.style.gap="0.5rem";
+  const res=document.createElement("p");
+
+  opts.forEach(o=>{
+    const b=document.createElement("button");
+    b.textContent=o;
+    onTap(b,()=>{
+      const cpu=opts[Math.floor(Math.random()*3)];
+      const win={Rock:"Scissors",Paper:"Rock",Scissors:"Paper"};
+      res.textContent=
+        o===cpu?"Draw 🤝":
+        win[o]===cpu?"You win 🎉":"CPU wins 😅";
+    });
+    row.appendChild(b);
+  });
+
+  root.replaceChildren(row,res);
+},
+
+typing(root) {
+  const words=["code","logic","array","loop","react"];
+  let word=words[Math.floor(Math.random()*words.length)];
+  let start=null;
+
+  const p=document.createElement("p");
+  p.textContent="Type: "+word;
+
+  const input=document.createElement("input");
+  input.autocapitalize="off";
+
+  const res=document.createElement("p");
+
+  input.addEventListener("focus",()=>start=performance.now());
+  input.addEventListener("input",()=>{
+    if(input.value===word){
+      const t=(performance.now()-start)/1000;
+      res.textContent=`Speed: ${(60/t).toFixed(0)} WPM`;
+      word=words[Math.floor(Math.random()*words.length)];
+      p.textContent="Type: "+word;
+      input.value="";
+      start=performance.now();
+    }
+  });
+
+  root.replaceChildren(p,input,res);
+},
+
+precision(root) {
+  const p=document.createElement("p");
+  p.textContent="Tap the circle";
+
+  const c=document.createElement("div");
+  c.style.width="120px";
+  c.style.height="120px";
+  c.style.borderRadius="50%";
+  c.style.background="var(--accent)";
+  c.style.margin="1rem auto";
+
+  let size=120,score=0;
+
+  onTap(c,()=>{
+    score++;
+    size=Math.max(50,size-10);
+    c.style.width=size+"px";
+    c.style.height=size+"px";
+    p.textContent="Score: "+score;
+  });
+
+  root.replaceChildren(p,c);
+},
+
+tap(root) {
+  let score=0,time=10;
+  const s=document.createElement("h2");
+  const t=document.createElement("p");
+  const b=document.createElement("button");
+  b.textContent="TAP!";
+
+  s.textContent=score;
+  t.textContent="Time: 10s";
+
+  const interval=setInterval(()=>{
+    time--;
+    t.textContent="Time: "+time+"s";
+    if(time<=0){
+      clearInterval(interval);
+      b.disabled=true;
+    }
+  },1000);
+
+  onTap(b,()=>{
+    if(time>0){
+      score++;
+      s.textContent=score;
+    }
+  });
+
+  root.replaceChildren(s,t,b);
+}
+
+};
+
+/* RENDER */
+const timeline=document.getElementById("timeline");
+
+games.forEach(g=>{
+  const card=document.createElement("div");
+  card.className="card";
+
+  const y=document.createElement("div");
+  y.className="year";
+  y.textContent=g.year;
+
+  const h=document.createElement("h2");
+  h.textContent=g.title;
+
+  const s=document.createElement("p");
+  s.className="summary";
+  s.textContent=g.summary;
+
+  const btn=document.createElement("button");
+  btn.textContent="Play";
+
+  const panel=document.createElement("div");
+  panel.className="panel";
+
+  onTap(btn,()=>{
+    panel.classList.toggle("active");
+    panel.innerHTML="";
+    miniGames[g.demo](panel);
+  });
+
+  card.append(y,h,s,btn,panel);
+  timeline.appendChild(card);
+});
+</script>
+
+</body>
+</html>
